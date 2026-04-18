@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>KUSL 내 손안의 법전 - 와이드 에디션</title>
+    <style>
+        :root { --primary: #1e3a8a; --accent: #fbbf24; --bg: #f8fafc; --white: #ffffff; --text: #1e293b; --danger: #e11d48; --success: #22c55e; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: var(--text); overflow: hidden; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* 헤더 영역 */
+        header { background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%); color: white; padding: 1.5rem 1rem; text-align: center; flex-shrink: 0; }
+        .search-container { max-width: 900px; margin: -20px auto 10px; padding: 15px 25px; background: var(--white); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); z-index: 10; position: relative; }
+        .search-group { display: flex; gap: 8px; margin-bottom: 5px; }
+        input { flex: 1; padding: 10px 15px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; }
+        button { padding: 10px 18px; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .btn-main { background: var(--primary); color: white; }
+        .btn-sub { background: var(--accent); color: #000; }
+
+        /* 메인 레이아웃 (와이드 뷰) */
+        .container { flex: 1; display: flex; gap: 20px; max-width: 100%; margin: 0 20px 20px; overflow: hidden; }
+        
+        /* 사이드바 (목록) */
+        #sidebar { width: 350px; background: var(--white); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; flex-shrink: 0; }
+        .law-list-item { padding: 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; border-radius: 6px; margin-bottom: 5px; }
+        .law-list-item:hover { background: #f0f7ff; }
+        .law-list-item.active { border-left: 4px solid var(--primary); background: #f0f7ff; }
+
+        /* 메인 콘텐츠 (법령 본문 대형 화면) */
+        #main-view { flex: 1; background: var(--white); border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; position: relative; }
+        
+        /* 상단 컨트롤 바 */
+        #view-controls { padding: 12px 20px; border-bottom: 1px solid #eee; display: none; align-items: center; justify-content: space-between; background: #fff; }
+        .btn-back { background: #64748b; color: white; }
+
+        /* 인사이트 카드 */
+        #insight-area { padding: 0 20px; flex-shrink: 0; }
+        .insight-card { padding: 15px 20px; border-left: 5px solid; border-radius: 6px; margin-top: 20px; }
+        .card-danger { background: #fdf2f2; border-left-color: var(--danger); }
+        .card-success { background: #f0fdf4; border-left-color: var(--success); }
+
+        /* 법령 iframe (와이드 뷰) */
+        #law-iframe { flex: 1; border: none; width: 100%; height: 100%; display: none; }
+        #welcome-msg { text-align: center; margin-top: 150px; color: #cbd5e1; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>⚖️ KUSL 통합 법률 포털</h1>
+</header>
+
+<div class="search-container">
+    <div class="search-group">
+        <input type="text" id="userStory" placeholder="상황 입력 (예: 알바 잘림, 교통사고, 도난, 보증금 문제, AI 커버곡 등)">
+        <button class="btn-sub" onclick="analyzeAndSearch()">지능형 분석</button>
+    </div>
+    <div class="search-group">
+        <input type="text" id="directSearch" placeholder="법령명 직접 검색">
+        <button class="btn-main" onclick="fetchLawList()">실시간 조회</button>
+    </div>
+</div>
+
+<div class="container">
+    <div id="sidebar">
+        <h3 style="margin-top:0">📋 관련 법령 목록</h3>
+        <div id="law-list-container"><p style="color:#94a3b8">검색 결과가 여기에 표시됩니다.</p></div>
+    </div>
+
+    <div id="main-view">
+        <div id="view-controls">
+            <button class="btn-back" onclick="goBack()">← 목록 및 인사이트로 돌아가기</button>
+            <strong id="current-law-name" style="color: var(--primary);"></strong>
+        </div>
+        
+        <div id="insight-area"></div>
+        
+        <div id="welcome-msg">
+            <h2 style="font-size: 2.5em;">🔍</h2>
+            <p>좌측 목록에서 법령을 선택하시면<br>이곳에 <strong>와이드 뷰</strong>로 본문이 표시됩니다.</p>
+        </div>
+        
+        <iframe id="law-iframe"></iframe>
+    </div>
+</div>
+
+<script>
+    const API_KEY = 'lawproject'; 
+
+    function analyzeAndSearch() {
+        const story = document.getElementById('userStory').value;
+        let kw = ""; let insight = "";
+
+        // 학회 전문 및 일상 법률 8대 카테고리
+        if (story.includes("커버곡") || story.includes("AI") || story.includes("목소리")) {
+            kw = "부정경쟁방지 및 영업비밀보호에 관한 법률";
+            insight = `<div class="insight-card card-danger"><h3>학회 인사이트: AI 음성 복제</h3><p>부경법 제2조 제1호 타목에 의거, 타인의 음성을 무단 사용하는 행위는 인격권 및 경제적 이익 침해에 해당합니다.</p></div>`;
+        } else if (story.includes("시민구단") || story.includes("구단주")) {
+            kw = "상법";
+            insight = `<div class="insight-card card-danger"><h3>학회 인사이트: 시민구단 독립성</h3><p>시민구단은 상법상 주식회사이므로, 지자체장은 이사회를 통한 간접 개입만을 수행해야 합니다[cite: 1101, 1109, 1124].</p></div>`;
+        } else if (story.includes("교통사고") || story.includes("사고") || story.includes("뺑소니")) {
+            kw = "도로교통법";
+            insight = `<div class="insight-card card-success"><h3>생활 가이드: 교통사고</h3><p>사고 시 즉시 구호조치 의무가 발생하며, 미이행 시 도교법에 의거 가중 처벌됩니다.</p></div>`;
+        } else if (story.includes("도난") || story.includes("훔쳐") || story.includes("강도")) {
+            kw = "형법";
+            insight = `<div class="insight-card card-success"><h3>생활 가이드: 도난/절도</h3><p>타인의 재물을 절취하는 행위는 형법상 절도죄에 해당하며, 주운 물건을 안 돌려주면 점유이탈물횡령죄가 적용됩니다.</p></div>`;
+        } else if (story.includes("환불") || story.includes("취소") || story.includes("인터넷쇼핑")) {
+            kw = "전자상거래 등에서의 소비자보호에 관한 법률";
+            insight = `<div class="insight-card card-success"><h3>생활 가이드: 환불 거부</h3><p>전자상거래법에 따라 단순 변심이라도 물품 수령 후 7일 이내에는 청약 철회가 가능합니다.</p></div>`;
+        } else if (story.includes("층간소음") || story.includes("이웃") || story.includes("시끄러")) {
+            kw = "소음·진동관리법";
+            insight = `<div class="insight-card card-success"><h3>생활 가이드: 층간소음</h3><p>공동주택 층간소음 기준 미달 시 소음진동관리법에 따른 분쟁 조정 신청이 가능합니다.</p></div>`;
+        } else if (story.includes("알바") || story.includes("해고") || story.includes("최저임금")) {
+            kw = "근로기준법";
+            insight = `<div class="insight-card card-success"><h3>생활 가이드: 노동 권익</h3><p>부당한 해고나 임금 체불은 근로기준법 위반으로, 노동청 진정 절차를 밟을 수 있습니다.</p></div>`;
+        } else if (story.includes("사기") || story.includes("중고거래") || story.includes("입금")) {
+            kw = "형법";
+            insight = `<div class="insight-card card-success"><h3>생활 가이드: 사기 대응</h3><p>형법 제347조 사기죄가 적용됩니다. 이체 내역서와 대화 내용을 수사기관에 제출하십시오.</p></div>`;
+        }
+
+        if (kw) {
+            document.getElementById('insight-area').innerHTML = insight;
+            document.getElementById('directSearch').value = kw;
+            fetchLawList();
+        } else { alert("관련 키워드를 찾지 못했습니다."); }
+    }
+
+    async function fetchLawList() {
+        const query = document.getElementById('directSearch').value;
+        const container = document.getElementById('law-list-container');
+        container.innerHTML = "데이터 로딩 중...";
+        const url = `https://www.law.go.kr/DRF/lawSearch.do?OC=${API_KEY}&target=law&query=${encodeURIComponent(query)}&type=XML`;
+        try {
+            const res = await fetch(url);
+            const xmlText = await res.text();
+            const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+            const items = xml.getElementsByTagName("law");
+            let html = '';
+            for(let i=0; i < Math.min(items.length, 15); i++) {
+                const name = items[i].getElementsByTagName("법령명한글")[0].textContent;
+                const id = items[i].getElementsByTagName("법령ID")[0].textContent;
+                html += `<div class="law-list-item" onclick="fetchLawDetail('${id}', '${name}', this)"><strong>${name}</strong><br><small>ID: ${id}</small></div>`;
+            }
+            container.innerHTML = html || "결과가 없습니다.";
+        } catch(e) { container.innerHTML = "오류: 확장 프로그램(CORS)을 확인하세요."; }
+    }
+
+    async function fetchLawDetail(id, name, el) {
+        document.querySelectorAll('.law-list-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+
+        // 화면 전환: 인사이트와 웰컴 메시지를 숨기고 iframe을 크게 띄움
+        document.getElementById('welcome-msg').style.display = 'none';
+        document.getElementById('insight-area').style.display = 'none';
+        document.getElementById('view-controls').style.display = 'flex';
+        document.getElementById('current-law-name').innerText = name;
+        
+        const iframe = document.getElementById('law-iframe');
+        iframe.style.display = 'block';
+        // 법령 본문을 HTML 형식으로 직접 로드 ( iframe으로 격리하여 스타일 깨짐 방지 )
+        iframe.src = `https://www.law.go.kr/DRF/lawService.do?OC=${API_KEY}&target=law&ID=${id}&type=HTML`;
+    }
+
+    function goBack() {
+        // 상세 뷰를 숨기고 검색 초기 상태(인사이트 포함)로 복구
+        document.getElementById('law-iframe').style.display = 'none';
+        document.getElementById('view-controls').style.display = 'none';
+        document.getElementById('insight-area').style.display = 'block';
+        document.getElementById('welcome-msg').style.display = 'block';
+        document.querySelectorAll('.law-list-item').forEach(item => item.classList.remove('active'));
+    }
+</script>
+</body>
+</html>
