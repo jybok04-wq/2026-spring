@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>KUSL LEGAL-TECH | Premium Portfolio</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+
+        :root { 
+            --primary: #0f172a; --secondary: #1e293b; --accent: #fbbf24; 
+            --bg: #f1f5f9; --white: #ffffff; --text-main: #0f172a; --text-sub: #475569;
+            --success-bg: #f0fdf4; --success-text: #166534; --info-bg: #eff6ff; --info-text: #1e40af;
+        }
+        
+        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        header { 
+            background: var(--primary); color: white; height: 80px; flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); z-index: 1000;
+        }
+        .logo-main { font-size: 1.5rem; font-weight: 800; letter-spacing: 2px; color: var(--accent); margin: 0; }
+        .logo-sub { font-size: 0.7rem; letter-spacing: 3px; color: #94a3b8; margin-top: 2px; }
+
+        .quick-nav { 
+            max-width: 1000px; margin: 15px auto 0; width: 95%; 
+            display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; flex-shrink: 0;
+        }
+        .chip {
+            background: var(--white); color: var(--primary); padding: 8px 16px; border-radius: 50px;
+            font-size: 12px; font-weight: 700; cursor: pointer; border: 1px solid #e2e8f0;
+            transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .chip:hover { border-color: var(--primary); background: var(--primary); color: white; transform: translateY(-2px); }
+
+        .search-section { max-width: 1000px; margin: 15px auto; width: 95%; flex-shrink: 0; }
+        .search-card { background: var(--white); padding: 15px 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .search-group { display: flex; gap: 10px; margin-bottom: 8px; }
+        
+        input { flex: 1; padding: 12px 18px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; background: #f8fafc; outline: none; }
+        input::placeholder { color: #94a3b8; font-style: italic; }
+        input:focus { border-color: var(--primary); background: white; }
+        
+        button { padding: 0 20px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; transition: 0.2s; font-size: 13px; }
+        .btn-analyze { background: var(--accent); color: var(--primary); }
+        .btn-search { background: var(--primary); color: white; }
+
+        .main-layout { flex: 1; display: flex; gap: 20px; max-width: 1600px; margin: 0 auto 15px; width: 98%; overflow: hidden; }
+        
+        /* 왼쪽 사이드바: 목록과 매뉴얼로 이원화 */
+        aside { width: 320px; display: flex; flex-direction: column; gap: 15px; flex-shrink: 0; }
+        .aside-box { background: var(--white); border-radius: 12px; padding: 18px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; display: flex; flex-direction: column; }
+        
+        #law-list-container { height: 45%; } /* 목록 부분 축소 */
+        #manual-container { flex: 1; background: #fffbeb; border: 1px solid #fde68a; } /* 대응 매뉴얼 추가 */
+
+        .aside-title { font-size: 0.85rem; font-weight: 800; color: var(--primary); margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid var(--bg); display: flex; align-items: center; gap: 6px; }
+        #law-list-box { flex: 1; overflow-y: auto; }
+        .law-item { padding: 10px 12px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; border: 1px solid transparent; font-size: 13px; }
+        .law-item:hover { background: #f8fafc; border-color: #e2e8f0; }
+        .law-item.active { background: #f1f5f9; border-color: var(--primary); font-weight: 700; }
+
+        .manual-item { font-size: 12.5px; line-height: 1.6; color: #92400e; margin-bottom: 8px; display: flex; gap: 8px; }
+        .manual-step { background: var(--accent); color: var(--primary); width: 18px; height: 18px; border-radius: 4px; font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+        main { flex: 1; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; }
+        .viewer-header { padding: 12px 25px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: none; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .btn-back { background: #cbd5e1; color: var(--primary); padding: 5px 12px; font-weight: 600; font-size: 12px; }
+
+        .content-scroll-area { flex: 1; overflow-y: auto; }
+
+        #easy-law { padding: 15px 25px; background: var(--success-bg); border-bottom: 1px solid #dcfce7; display: none; align-items: center; gap: 12px; }
+        .easy-badge { background: var(--success-text); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 800; flex-shrink: 0; }
+
+        #glossary-section { padding: 15px 25px; background: var(--info-bg); border-bottom: 1px solid #dbeafe; display: none; }
+        .glossary-box { display: flex; align-items: center; gap: 10px; font-size: 13px; color: var(--info-text); }
+
+        #law-frame { width: 100%; height: 1600px; border: none; display: none; }
+
+        #academic-report { padding: 40px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: none; }
+        .report-card { background: white; padding: 35px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
+        .report-header { border-bottom: 2px solid var(--primary); padding-bottom: 12px; margin-bottom: 20px; }
+        .report-tag { color: var(--primary); font-weight: 800; font-size: 11px; letter-spacing: 1px; }
+        .report-title { font-size: 20px; font-weight: 800; margin: 8px 0; color: var(--primary); }
+        .report-body { line-height: 1.8; font-size: 15px; color: var(--text-sub); white-space: pre-wrap; }
+
+        #empty-view { text-align: center; padding-top: 150px; color: #cbd5e1; }
+        footer { height: 40px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #94a3b8; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+
+<header>
+    <p class="logo-main">KUSL LEGAL-TECH</p>
+    <p class="logo-sub">SPORTS & ENTERTAINMENT LAW HUB</p>
+</header>
+
+<div class="quick-nav">
+    <div class="chip" onclick="quickAction('시민구단')">⚽ 시민구단 독립성</div>
+    <div class="chip" onclick="quickAction('AI 커버곡')">🤖 AI 음성 저작권</div>
+    <div class="chip" onclick="quickAction('알바 해고')">🏢 알바/노동 권익</div>
+    <div class="chip" onclick="quickAction('중고 사기')">⚖️ 사기/보이스피싱 대응</div>
+    <div class="chip" onclick="quickAction('전세 보증금')">🏠 부동산 임대차</div>
+</div>
+
+<section class="search-section">
+    <div class="search-card">
+        <div class="search-group">
+            <input type="text" id="userStory" placeholder="상황을 분석해 드립니다 (eg. 알바 해고 당했어, 중고거래 사기 당했어)">
+            <button class="btn-analyze" onclick="analyzeStory()">지능형 분석 리포트</button>
+        </div>
+        <div class="search-group">
+            <input type="text" id="directSearch" placeholder="정확한 법령명을 검색하세요">
+            <button class="btn-search" onclick="fetchList()">실시간 법제처 조회</button>
+        </div>
+    </div>
+</section>
+
+<div class="main-layout">
+    <aside>
+        <div class="aside-box" id="law-list-container">
+            <div class="aside-title">📋 관련 법령 목록</div>
+            <div id="law-list-box">
+                <p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:10px;">분석을 시작하세요.</p>
+            </div>
+        </div>
+        
+        <div class="aside-box" id="manual-container">
+            <div class="aside-title">🚀 실무 대응 매뉴얼</div>
+            <div id="manual-box">
+                <p style="color:#92400e; font-size:11px; text-align:center;">상황별 Action Plan이 <br>여기에 표시됩니다.</p>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <div class="viewer-header" id="viewer-header">
+            <button class="btn-back" onclick="goBack()">← 목록 복원</button>
+            <span id="header-law-name"></span>
+        </div>
+
+        <div class="content-scroll-area" id="content-scroll">
+            <div id="easy-law">
+                <span class="easy-badge">EASY LAW</span>
+                <div id="easy-text" style="font-size: 13.5px; color: var(--success-text); font-weight: 600;"></div>
+            </div>
+            <div id="glossary-section">
+                <div class="glossary-box">🔍 <div id="glossary-text"></div></div>
+            </div>
+
+            <div id="empty-view">
+                <h2 style="font-size: 3rem; margin: 0;">🏛️</h2>
+                <p>KUSL 학술 리서치와 실시간 법령의 통합 솔루션</p>
+            </div>
+
+            <iframe id="law-frame"></iframe>
+
+            <div id="academic-report">
+                <div class="report-card">
+                    <div class="report-header">
+                        <div class="report-tag">KUSL ACADEMIC INSIGHT</div>
+                        <div id="report-title" class="report-title"></div>
+                    </div>
+                    <div id="report-body" class="report-body"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<footer>
+    © 2026 KUSL Sports Law Hub.
+</footer>
+
+<script>
+    const API_KEY = 'lawproject'; 
+    
+    const db = {
+        "시민구단": {
+            easy: "지자체장이 구단 운영에 개별적으로 개입하는 것은 상법상 주식회사의 독립성을 침해할 소지가 큽니다.",
+            glossary: "팔길이 원칙: 지원은 하되 간섭은 하지 않는다는 원칙으로, 공공기관이나 구단 운영의 독립성을 상징합니다.",
+            manual: [
+                "이사회의 의결 절차가 법적으로 정당했는지 회의록을 확인하세요.",
+                "조례상 구단주(시장)의 권한 범위를 상법상 주주 권한과 비교 분석하세요.",
+                "전문 경영인(대표이사)의 임기 보장을 위한 법적 장치를 검토하세요."
+            ],
+            title: "시민구단 지배구조와 팔길이 원칙(Arm's Length)",
+            body: "• 쟁점: 지자체장을 예산 집행권자로 볼 것인가, 상법상 대주주로 볼 것인가\n• 학술 분석: 시민구단은 상법상 주식회사이므로 독립된 법인격을 존중해야 함. 지자체장은 이사회를 통해 의결권을 행사할 뿐 인사권 등에 직접 개입해서는 안 됨"
+        },
+        "AI": {
+            easy: "AI를 이용한 목소리 복제는 '인격표지영리권' 침해에 해당하여 손해배상 책임이 발생할 수 있습니다.",
+            glossary: "인격표지영리권(퍼블리시티권): 이름, 얼굴, 목소리 등 개인의 특징을 상업적으로 이용할 수 있는 권리입니다.",
+            manual: [
+                "음성 학습에 사용된 원본 데이터의 출처와 동의 여부를 확인하세요.",
+                "부정경쟁방지법 제2조 1호 타목의 침해 요건(경제적 이익 침해)을 검토하세요.",
+                "플랫폼(유튜브 등)에 저작권 위반 신고 및 게시중단(Take-down)을 요청하세요."
+            ],
+            title: "생성형 AI 음성 모방 및 AI 커버곡의 법적 성격",
+            body: "• 쟁점: 목소리를 경제적 가치가 있는 인격표지로 보호할 수 있는가\n• 학술 분석: 부경법 제2조 제1호 타목은 타인의 음성을 무단 사용하여 경제적 이익을 침해하는 행위를 금지함"
+        },
+        "알바": {
+            easy: "해고 통보나 임금 체불은 근로기준법상 강력한 처벌 대상입니다.",
+            glossary: "해고예고수당: 해고 30일 전에 예고하지 않았을 때 지급해야 하는 30일분 이상의 통상임금입니다.",
+            manual: [
+                "근로계약서 사본과 출퇴근 기록(문자, 통화기록 등)을 확보하세요.",
+                "해고 통보를 받은 날짜와 구체적인 사유를 서면이나 녹취로 남기세요.",
+                "고용노동부 홈페이지를 통해 '부당해고 구제신청' 또는 '임금체불 진정'을 접수하세요."
+            ],
+            title: "근로 권익 보호 및 부당해고 대응 가이드",
+            body: "• 근로: 부당해고 시 해고예고수당 청구 가능 여부 및 노동위원회 구제신청 절차 안내"
+        },
+        "사기": {
+            easy: "중고거래 사기는 형법상 사기죄가 적용됩니다. '기망 행위'를 입증하는 증거 확보가 핵심입니다.",
+            glossary: "기망행위: 허위 사실을 말하거나 진실을 숨겨서 상대방을 착오에 빠뜨리는 행위를 말합니다.",
+            manual: [
+                "상대방의 입금 계좌번호와 전화번호를 '더치트' 등 사기 방지 사이트에서 조회하세요.",
+                "입금 내역서(은행 발급)와 대화 내용 전체를 PDF나 캡처로 준비하세요.",
+                "경찰청 사이버수사대(ECRM)에 온라인 신고 후 가까운 경찰서를 방문하세요."
+            ],
+            title: "중고거래 사기 및 사이버 범죄 대응 가이드",
+            body: "• 형사: 형법 제347조(사기) 적용을 위한 기망 행위 입증 자료 확보 가이드"
+        },
+        "부동산": {
+            easy: "보증금을 못 받은 상태에서 이사를 가야 한다면 반드시 '임차권등기명령'을 신청해야 합니다.",
+            glossary: "임차권등기명령: 이사를 가더라도 세입자의 보증금 우선순위를 법적으로 유지해주는 제도입니다.",
+            manual: [
+                "계약 만료 2개월 전까지 계약 갱신 거절 통보를 한 증거(문자, 내용증명)를 확인하세요.",
+                "임대차 계약서 원본과 전입신고/확정일자가 유효한지 체크하세요.",
+                "관할 법원에 방문하여 '임차권등기명령'을 신청하고 등기부 등재를 확인한 뒤 이사하세요."
+            ],
+            title: "부동산 임대차 계약 및 보증금 보호 가이드",
+            body: "• 부동산: 보증금 미반환 시 임차권등기명령 신청 절차 및 법적 효력 설명"
+        }
+    };
+
+    function quickAction(val) { document.getElementById('userStory').value = val; analyzeStory(); }
+
+    function analyzeStory() {
+        const story = document.getElementById('userStory').value;
+        let kw = ""; let key = "";
+        if (story.includes("시민구단")) { kw = "상법"; key = "시민구단"; }
+        else if (story.includes("AI") || story.includes("커버곡")) { kw = "부정경쟁방지 및 영업비밀보호에 관한 법률"; key = "AI"; }
+        else if (story.includes("알바") || story.includes("해고") || story.includes("월급")) { kw = "근로기준법"; key = "알바"; }
+        else if (story.includes("사기") || story.includes("중고")) { kw = "형법 사기"; key = "사기"; }
+        else if (story.includes("부동산") || story.includes("전세") || story.includes("보증금")) { kw = "주택임대차보호법"; key = "부동산"; }
+
+        if (key) {
+            document.getElementById('easy-text').innerText = db[key].easy;
+            document.getElementById('glossary-text').innerText = db[key].glossary;
+            document.getElementById('report-title').innerText = db[key].title;
+            document.getElementById('report-body').innerText = db[key].body;
+            
+            // 매뉴얼 업데이트
+            let mHtml = "";
+            db[key].manual.forEach((step, idx) => {
+                mHtml += `<div class="manual-item"><div class="manual-step">${idx+1}</div>${step}</div>`;
+            });
+            document.getElementById('manual-box').innerHTML = mHtml;
+            
+            document.getElementById('directSearch').value = kw;
+            fetchList();
+        }
+    }
+
+    async function fetchList() {
+        const q = document.getElementById('directSearch').value;
+        const box = document.getElementById('law-list-box');
+        box.innerHTML = "<p style='text-align:center; padding:10px; font-size:11px;'>조회 중...</p>";
+        try {
+            const res = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?OC=${API_KEY}&target=law&query=${encodeURIComponent(q)}&type=XML`);
+            const text = await res.text();
+            const xml = new DOMParser().parseFromString(text, "text/xml");
+            const items = xml.getElementsByTagName("law");
+            let html = ''; let foundLaws = [];
+            for(let i=0; i<items.length; i++) {
+                const name = items[i].getElementsByTagName("법령명한글")[0].textContent;
+                const id = items[i].getElementsByTagName("법령ID")[0].textContent;
+                if (name.includes("군형법") || name.includes("군사")) continue;
+                if (name === q) foundLaws.unshift({name, id});
+                else foundLaws.push({name, id});
+            }
+            foundLaws.slice(0, 8).forEach(law => { // 개수 줄임
+                html += `<div class="law-item" onclick="showDetail('${law.id}', '${law.name}', this)"><div class="law-item-name">${law.name}</div></div>`;
+            });
+            box.innerHTML = html || "<p style='text-align:center; padding:10px;'>결과 없음</p>";
+        } catch(e) { box.innerHTML = "<p style='color:red; font-size:10px; padding:10px;'>오류 발생</p>"; }
+    }
+
+    function showDetail(id, name, el) {
+        document.querySelectorAll('.law-item').forEach(i => i.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('empty-view').style.display = 'none';
+        document.getElementById('viewer-header').style.display = 'flex';
+        document.getElementById('easy-law').style.display = 'flex';
+        document.getElementById('glossary-section').style.display = 'block';
+        document.getElementById('header-law-name').innerText = name;
+        const frame = document.getElementById('law-frame');
+        frame.style.display = 'block';
+        frame.src = `https://www.law.go.kr/DRF/lawService.do?OC=${API_KEY}&target=law&ID=${id}&type=HTML`;
+        document.getElementById('academic-report').style.display = 'block';
+        document.getElementById('content-scroll').scrollTop = 0;
+    }
+
+    function goBack() {
+        document.getElementById('law-frame').style.display = 'none';
+        document.getElementById('academic-report').style.display = 'none';
+        document.getElementById('easy-law').style.display = 'none';
+        document.getElementById('glossary-section').style.display = 'none';
+        document.getElementById('viewer-header').style.display = 'none';
+        document.getElementById('empty-view').style.display = 'block';
+    }
+</script>
+</body>
+</html>
