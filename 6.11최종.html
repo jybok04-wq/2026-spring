@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KUSL LEGAL-TECH | Integrated Legal Portal</title>
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        /* ── 글로벌 변수 및 포털 기본 스타일 ── */
+        :root { 
+            --primary: #0f172a; --secondary: #1e293b; --accent: #fbbf24; 
+            --bg: #f1f5f9; --white: #ffffff; --text-main: #0f172a; --text-sub: #475569;
+            --success-bg: #f0fdf4; --success-text: #166534; --warning-bg: #fffbeb; --warning-text: #92400e;
+            --info-bg: #eff6ff; --info-text: #1e40af;
+            --tree-line: #cbd5e1;
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Pretendard', sans-serif; margin: 0; background: var(--bg); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* ── 상단 포털 공통 헤더 ── */
+        header.portal-header { background: var(--primary); color: white; height: 60px; flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; z-index: 1000; border-bottom: 2px solid var(--accent); }
+        .logo-main { font-size: 1.3rem; font-weight: 800; letter-spacing: 2px; color: var(--accent); }
+
+        /* ── 메인 탭 네비게이션 ── */
+        .tab-nav { background: var(--secondary); display: flex; gap: 0; flex-shrink: 0; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 0 20px; z-index: 999; }
+        .tab-btn { padding: 15px 22px; font-size: 12px; font-weight: 700; color: #94a3b8; border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; letter-spacing: 0.5px; font-family: 'Pretendard', sans-serif; }
+        .tab-btn:hover { color: #e2e8f0; }
+        .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+        /* ── 레이아웃 기본 단위 ── */
+        .page { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+        .page.active { display: flex; }
+
+        /* ── 대시보드 퀵 네비게이션 ── */
+        .quick-nav { max-width: 1100px; margin: 15px auto 0; width: 95%; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; flex-shrink: 0; }
+        .chip { background: var(--white); color: var(--primary); padding: 6px 14px; border-radius: 50px; font-size: 11px; font-weight: 700; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.2s; }
+        .chip:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+
+        .search-section { max-width: 1000px; margin: 10px auto; width: 95%; flex-shrink: 0; }
+        .search-card { background: var(--white); padding: 15px 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .search-group { display: flex; gap: 8px; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 10px 15px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; background: #f8fafc; outline: none; font-family: 'Pretendard', sans-serif; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); background: #ffffff; }
+        
+        button { padding: 0 18px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 12px; font-family: 'Pretendard', sans-serif; height: 38px; }
+        .btn-analyze { background: var(--accent); color: var(--primary); }
+        .btn-search { background: var(--primary); color: white; }
+
+        .main-layout { flex: 1; display: flex; gap: 15px; max-width: 1700px; margin: 0 auto 10px; width: 98%; overflow: hidden; }
+        
+        aside { width: 300px; display: flex; flex-direction: column; gap: 10px; flex-shrink: 0; }
+        .aside-box { background: var(--white); border-radius: 12px; padding: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; }
+        .tree-box { background: #f8fafc; border: 1px dashed var(--tree-line); }
+        .tree-node { font-size: 10px; padding: 8px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid var(--tree-line); cursor: pointer; transition: 0.2s; }
+        .tree-node:hover { background: #f1f5f9; border-left-color: var(--primary); }
+        .tree-node.active { border-left-color: var(--accent); background: white; font-weight: bold; }
+
+        #law-list-box { flex: 1; overflow-y: auto; }
+        .law-item { padding: 8px; border-radius: 6px; cursor: pointer; margin-bottom: 3px; font-size: 12px; border: 1px solid transparent; }
+        .law-item:hover { background: #f1f5f9; }
+        .law-item.active { background: var(--primary); color: white; font-weight: 700; }
+
+        main.dashboard-content { flex: 1; background: var(--white); border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: flex; flex-direction: column; overflow: hidden; border: 1px solid #e2e8f0; position: relative; }
+        .viewer-header { padding: 10px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: none; align-items: center; justify-content: space-between; }
+        .content-scroll-area { flex: 1; overflow-y: auto; padding-bottom: 120px; }
+        #law-frame { width: 100%; height: 1600px; border: none; display: none; }
+
+        .legal-advice-box { background: var(--info-bg); border: 1px solid #bfdbfe; padding: 12px; border-radius: 8px; margin: 20px auto; width: 90%; text-align: center; }
+        .legal-advice-text { font-size: 11px; color: var(--info-text); font-weight: 600; line-height: 1.5; }
+
+        #precedent-bot {
+            position: absolute; bottom: 20px; right: 20px; width: 320px; background: var(--primary);
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); display: none; flex-direction: column;
+            overflow: hidden; border: 1px solid rgba(255,255,255,0.1); z-index: 2000;
+        }
+        .bot-header { background: var(--accent); padding: 10px 15px; font-size: 12px; font-weight: 800; color: var(--primary); display: flex; justify-content: space-between; }
+        .bot-content { padding: 15px; color: #e2e8f0; font-size: 12.5px; line-height: 1.6; max-height: 250px; overflow-y: auto; }
+
+        #academic-report { padding: 30px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: none; }
+        .report-card { background: white; padding: 25px; border-radius: 12px; border: 1px solid #e2e8f0; }
+        
+        #empty-view { text-align: center; padding-top: 150px; color: #cbd5e1; }
+        footer.portal-footer { height: 30px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: #94a3b8; flex-shrink: 0; background: var(--white); border-top: 1px solid #e2e8f0; }
+
+        /* ── 민사재판 전용 레이아웃 ── */
+        .civil-layout { display: grid; grid-template-columns: 450px 1fr; gap: 20px; height: 100%; padding: 20px; overflow: hidden; }
+        .civil-card { background: var(--white); border-radius: 12px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .civil-header { background: #f8fafc; padding: 15px 20px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; }
+        .civil-title { font-size: 14px; font-weight: 800; color: var(--primary); }
+        .civil-body { padding: 20px; flex: 1; overflow-y: auto; }
+
+        /* 소송 가이드 타임라인 */
+        .timeline-vertical { display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px; }
+        .timeline-step { display: flex; gap: 15px; cursor: pointer; padding: 12px; border-radius: 8px; border: 1px solid transparent; transition: all 0.2s; }
+        .timeline-step:hover { background: #f8fafc; }
+        .timeline-step.active { background: var(--info-bg); border-color: #bfdbfe; }
+        .step-num { width: 28px; height: 28px; border-radius: 50%; background: #e2e8f0; color: var(--text-sub); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex-shrink: 0; }
+        .timeline-step.active .step-num { background: var(--primary); color: white; }
+        .step-detail { display: flex; flex-direction: column; }
+        .step-title { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+        .step-desc { font-size: 11px; color: var(--text-sub); line-height: 1.4; }
+
+        .timeline-info-box { background: #f8fafc; border: 1px dashed #cbd5e1; padding: 15px; border-radius: 8px; font-size: 12px; line-height: 1.6; }
+
+        /* 소장 작성 에디터 */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label { font-size: 11px; font-weight: 700; color: var(--text-sub); }
+        
+        /* 모의 서류(소장) 용지 스타일 */
+        .document-paper { background: white; border: 1px solid #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.06); padding: 40px; font-family: 'Pretendard', sans-serif; color: #111; line-height: 1.8; font-size: 13px; min-height: 500px; position: relative; border-top: 5px solid var(--primary); }
+        .doc-watermark { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-30deg); font-size: 60px; font-weight: 900; color: rgba(15, 23, 42, 0.03); white-space: nowrap; pointer-events: none; }
+        .doc-header { text-align: center; font-size: 22px; font-weight: 800; margin-bottom: 40px; letter-spacing: 5px; border-bottom: 2px double #111; padding-bottom: 15px; }
+        .doc-section { margin-bottom: 25px; }
+        .doc-section-title { font-weight: 800; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 10px; font-size: 14px; }
+        .doc-meta-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .doc-meta-table td { padding: 6px 0; vertical-align: top; }
+        .doc-meta-table td.label { font-weight: 700; width: 100px; color: #444; }
+
+
+        /* ════════════════════════════════════════
+             [중요] 형사 모의재판 탭 스코프 스타일 (#page-mocktrial 전용)
+        ════════════════════════════════════════ */
+        #page-mocktrial {
+            --bg: #0c0f18;
+            --panel: #111827;
+            --panel2: #161d2e;
+            --border: #1e2d40;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --text: #e2e8f0;
+            --muted: #64748b;
+            --pro: #60a5fa;   /* 검사 = 파랑 */
+            --con: #a78bfa;   /* 변호인 = 보라 */
+            --judge: #fbbf24; /* 재판장 = 금 */
+            --wit: #34d399;   /* 증인 = 초록 */
+            --evidence: #fb923c;
+            
+            background: var(--bg);
+            color: var(--text);
+            overflow-y: auto;
+            flex: 1;
+            display: none;
+            flex-direction: column;
+        }
+        #page-mocktrial.active {
+            display: flex;
+        }
+
+        /* 내장형 바로가기 제어 바 */
+        #page-mocktrial .control-bar {
+            background: rgba(255,255,255,0.02);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #page-mocktrial .back-btn {
+            background: #1e2d40;
+            color: #94a3b8;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        #page-mocktrial .back-btn:hover { background: #263348; color: #e2e8f0; }
+        #page-mocktrial .header-badge {
+            font-size: 10px; font-weight: 700;
+            background: rgba(230,57,70,0.12);
+            color: var(--accent);
+            border: 1px solid rgba(230,57,70,0.3);
+            padding: 4px 12px; border-radius: 50px;
+            letter-spacing: 1px;
+        }
+
+        /* 히어로 */
+        #page-mocktrial .hero {
+            background: linear-gradient(160deg, #0f0f1a 0%, #1a0a0e 60%, #0c0f18 100%);
+            border-bottom: 1px solid #2a1a1a;
+            padding: 40px 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        #page-mocktrial .hero::before {
+            content: '';
+            position: absolute; top: -80px; left: 50%;
+            transform: translateX(-50%);
+            width: 700px; height: 260px;
+            background: radial-gradient(ellipse, rgba(230,57,70,0.1) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        #page-mocktrial .hero-eyebrow {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(230,57,70,0.1);
+            border: 1px solid rgba(230,57,70,0.3);
+            color: var(--accent);
+            font-size: 10px; font-weight: 800; letter-spacing: 2.5px;
+            padding: 5px 16px; border-radius: 50px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+        #page-mocktrial .hero-title {
+            font-size: 2rem; font-weight: 900; color: #fff;
+            line-height: 1.25; letter-spacing: -0.5px;
+            margin-bottom: 12px;
+        }
+        #page-mocktrial .hero-title .accent { color: var(--accent); }
+        #page-mocktrial .hero-desc {
+            font-size: 13px; color: var(--muted);
+            max-width: 580px; margin: 0 auto; line-height: 1.75;
+        }
+
+        /* 사건 메타 바 */
+        #page-mocktrial .case-meta {
+            display: flex; justify-content: center; flex-wrap: wrap;
+            gap: 0; background: var(--panel); border-bottom: 1px solid var(--border);
+        }
+        #page-mocktrial .meta-item { text-align: center; padding: 15px 25px; border-right: 1px solid var(--border); }
+        #page-mocktrial .meta-item:last-child { border-right: none; }
+        #page-mocktrial .meta-label { font-size: 9px; font-weight: 800; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 5px; }
+        #page-mocktrial .meta-value { font-size: 13px; font-weight: 700; color: var(--text); }
+        #page-mocktrial .meta-value.red { color: var(--accent); }
+
+        /* 모의재판 전용 세부 탭 바 */
+        #page-mocktrial .tab-bar {
+            background: var(--panel2); border-bottom: 1px solid var(--border);
+            display: flex; gap: 0; padding: 0 40px; position: sticky; top: 0; z-index: 100;
+        }
+        #page-mocktrial .tab {
+            padding: 14px 22px; font-size: 12px; font-weight: 700; color: var(--muted);
+            border: none; background: none; cursor: pointer; border-bottom: 3px solid transparent;
+            font-family: 'Pretendard', sans-serif; transition: 0.2s; letter-spacing: 0.5px;
+        }
+        #page-mocktrial .tab:hover { color: var(--text); }
+        #page-mocktrial .tab.active { color: var(--judge); border-bottom-color: var(--judge); }
+
+        /* 세부 콘텐트 토글 영역 */
+        #page-mocktrial .content { display: none; }
+        #page-mocktrial .content.active { display: block; }
+
+        /* 공통 레이아웃 배치 */
+        #page-mocktrial .section-wrap { max-width: 1300px; margin: 0 auto; padding: 36px 40px 60px; }
+        #page-mocktrial .overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        #page-mocktrial .info-card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px; }
+        #page-mocktrial .info-card.full { grid-column: 1 / -1; }
+        #page-mocktrial .card-title {
+            font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+            margin-bottom: 16px; display: flex; align-items: center; gap: 8px;
+        }
+        #page-mocktrial .card-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        #page-mocktrial .profile-row { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 14px; }
+        #page-mocktrial .profile-row:last-child { margin-bottom: 0; }
+        #page-mocktrial .profile-icon {
+            width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+        }
+        #page-mocktrial .profile-icon.defendant { background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.25); }
+        #page-mocktrial .profile-icon.victim    { background: rgba(96,165,250,0.1);  border: 1px solid rgba(96,165,250,0.25); }
+        #page-mocktrial .profile-name { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 3px; }
+        #page-mocktrial .profile-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+        #page-mocktrial .timeline-event { display: flex; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+        #page-mocktrial .timeline-event:last-child { border-bottom: none; }
+        #page-mocktrial .t-date { font-size: 10px; font-weight: 700; color: var(--accent); white-space: nowrap; padding-top: 2px; min-width: 80px; }
+        #page-mocktrial .t-text { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+
+        #page-mocktrial .charge-badge {
+            display: inline-block; background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.3);
+            color: var(--accent); font-size: 11px; font-weight: 700; padding: 5px 14px; border-radius: 4px; margin-right: 8px; margin-bottom: 8px;
+        }
+
+        /* 변론 구조화 */
+        #page-mocktrial .argument-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        #page-mocktrial .arg-panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        #page-mocktrial .arg-header { padding: 16px 20px; font-size: 11px; font-weight: 800; letter-spacing: 1.5px; display: flex; align-items: center; gap: 10px; }
+        #page-mocktrial .arg-header.prosecutor { background: rgba(96,165,250,0.1); color: var(--pro); border-bottom: 1px solid rgba(96,165,250,0.2); }
+        #page-mocktrial .arg-header.defense    { background: rgba(167,139,250,0.1); color: var(--con); border-bottom: 1px solid rgba(167,139,250,0.2); }
+        #page-mocktrial .arg-body { padding: 20px; }
+        #page-mocktrial .arg-section { margin-bottom: 20px; }
+        #page-mocktrial .arg-section:last-child { margin-bottom: 0; }
+        #page-mocktrial .arg-section-title { font-size: 11px; font-weight: 800; letter-spacing: 1px; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+        #page-mocktrial .arg-section-title.pro { color: var(--pro); }
+        #page-mocktrial .arg-section-title.con { color: var(--con); }
+
+        #page-mocktrial .arg-point { display: flex; gap: 10px; margin-bottom: 12px; }
+        #page-mocktrial .arg-point:last-child { margin-bottom: 0; }
+        #page-mocktrial .point-num {
+            width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 800; flex-shrink: 0; margin-top: 2px;
+        }
+        #page-mocktrial .point-num.pro { background: rgba(96,165,250,0.15); color: var(--pro); }
+        #page-mocktrial .point-num.con { background: rgba(167,139,250,0.15); color: var(--con); }
+        #page-mocktrial .point-text { font-size: 12.5px; color: #94a3b8; line-height: 1.7; }
+        #page-mocktrial .point-text strong { color: var(--text); font-weight: 700; }
+
+        #page-mocktrial .law-cite { background: rgba(244,162,97,0.06); border-left: 3px solid var(--gold); border-radius: 0 6px 6px 0; padding: 9px 13px; margin-top: 8px; font-size: 11.5px; color: #94a3b8; line-height: 1.6; }
+        #page-mocktrial .law-cite strong { color: var(--gold); }
+
+        /* 증거물 목록 */
+        #page-mocktrial .evidence-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        #page-mocktrial .ev-card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 18px; transition: 0.2s; }
+        #page-mocktrial .ev-card:hover { border-color: rgba(251,146,60,0.4); }
+        #page-mocktrial .ev-num { display: inline-block; background: rgba(251,146,60,0.12); color: var(--evidence); font-size: 9px; font-weight: 800; letter-spacing: 1px; padding: 3px 9px; border-radius: 3px; margin-bottom: 10px; }
+        #page-mocktrial .ev-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+        #page-mocktrial .ev-desc { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+        /* 판결문 카드 */
+        #page-mocktrial .verdict-section { max-width: 800px; margin: 0 auto; }
+        #page-mocktrial .verdict-box {
+            background: linear-gradient(135deg, rgba(251,191,36,0.08) 0%, rgba(99,102,241,0.06) 100%);
+            border: 1px solid rgba(251,191,36,0.25); border-radius: 16px; padding: 36px 40px; text-align: center; margin-bottom: 28px;
+        }
+        #page-mocktrial .verdict-stamp { display: inline-block; font-size: 10px; font-weight: 900; letter-spacing: 3px; color: var(--judge); border: 2px solid var(--judge); padding: 5px 16px; border-radius: 4px; margin-bottom: 20px; }
+        #page-mocktrial .verdict-main { font-size: 1.6rem; font-weight: 900; color: #fff; margin-bottom: 14px; line-height: 1.3; }
+        #page-mocktrial .verdict-detail { font-size: 13px; color: var(--muted); line-height: 1.8; max-width: 600px; margin: 0 auto; }
+
+        #page-mocktrial .sentence-row { display: flex; gap: 16px; margin-bottom: 12px; align-items: flex-start; }
+        #page-mocktrial .sentence-charge {
+            background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.25);
+            color: var(--accent); font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 4px; white-space: nowrap; flex-shrink: 0;
+        }
+        #page-mocktrial .sentence-text { font-size: 13px; color: #94a3b8; line-height: 1.6; }
+
+        #page-mocktrial .reasoning-block { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 16px; }
+        #page-mocktrial .reasoning-title { font-size: 11px; font-weight: 800; letter-spacing: 1px; color: var(--judge); margin-bottom: 10px; }
+        #page-mocktrial .reasoning-text { font-size: 13px; color: #94a3b8; line-height: 1.75; }
+
+        /* 참여자 배지 라인 */
+        #page-mocktrial .participant-strip { background: var(--panel2); border-bottom: 1px solid var(--border); padding: 16px 40px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+        #page-mocktrial .p-chip { display: flex; align-items: center; gap: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; }
+        #page-mocktrial .p-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        #page-mocktrial .p-dot.judge { background: var(--judge); }
+        #page-mocktrial .p-dot.pro   { background: var(--pro); }
+        #page-mocktrial .p-dot.con   { background: var(--con); }
+        #page-mocktrial .p-dot.wit   { background: var(--wit); }
+        #page-mocktrial .p-name-sm { font-size: 11px; font-weight: 700; color: var(--text); }
+        #page-mocktrial .p-role-sm { font-size: 10px; color: var(--muted); }
+
+        /* 공통 헤더 데코레이션 */
+        #page-mocktrial .sec-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+        #page-mocktrial .sec-label { font-size: 9px; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; white-space: nowrap; }
+        #page-mocktrial .sec-label.overview { background: rgba(251,191,36,0.1);  color: var(--judge); border: 1px solid rgba(251,191,36,0.25); }
+        #page-mocktrial .sec-label.pro      { background: rgba(96,165,250,0.1);  color: var(--pro);   border: 1px solid rgba(96,165,250,0.25); }
+        #page-mocktrial .sec-label.con      { background: rgba(167,139,250,0.1); color: var(--con);   border: 1px solid rgba(167,139,250,0.25); }
+        #page-mocktrial .sec-label.evidence { background: rgba(251,146,60,0.1);  color: var(--evidence); border: 1px solid rgba(251,146,60,0.25); }
+        #page-mocktrial .sec-divider { flex: 1; height: 1px; background: var(--border); }
+
+        #page-mocktrial .sentence-demand { background: rgba(230,57,70,0.08); border: 1px solid rgba(230,57,70,0.2); border-radius: 10px; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; margin-top: 20px; }
+        #page-mocktrial .sd-label { font-size: 10px; font-weight: 700; color: var(--muted); letter-spacing: 1.5px; text-transform: uppercase; }
+        #page-mocktrial .sd-value { font-size: 1.2rem; font-weight: 900; color: var(--accent); }
+        #page-mocktrial .mocktrial-footer { background: var(--panel); border-top: 1px solid var(--border); height: 40px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--muted); flex-shrink: 0; }
+
+        @media (max-width: 900px) {
+            #page-mocktrial .overview-grid, #page-mocktrial .argument-layout { grid-template-columns: 1fr; }
+            #page-mocktrial .info-card.full { grid-column: 1; }
+            #page-mocktrial .evidence-grid { grid-template-columns: 1fr 1fr; }
+            #page-mocktrial .tab-bar { padding: 0 16px; overflow-x: auto; }
+            #page-mocktrial .section-wrap { padding: 24px 20px 40px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── 상단 포털 메인 헤더 ── -->
+<header class="portal-header">
+    <div class="logo-main">KUSL LEGAL-TECH PORTAL</div>
+    <div style="font-size:11px; color:#64748b;">건국대학교 스포츠법학 연구회</div>
+</header>
+
+<!-- ── 상단 포털 메인 탭 내비게이션 ── -->
+<nav class="tab-nav">
+    <button class="tab-btn active" id="btn-dashboard" onclick="switchTab('dashboard', this)">⚖️ 법령 대시보드</button>
+    <button class="tab-btn" id="btn-civil" onclick="switchTab('civil', this)">📁 민사재판 시뮬레이터</button>
+    <button class="tab-btn" id="btn-mocktrial" onclick="switchTab('mocktrial', this)">🏛️ 형사 모의재판</button>
+</nav>
+
+<!-- ════════════════════════════════════════
+     페이지 1: 법령 대시보드
+════════════════════════════════════════ -->
+<div class="page active" id="page-dashboard">
+
+    <div class="quick-nav">
+        <div class="chip" onclick="quickAction('시민구단')">⚽ 시민구단(상법)</div>
+        <div class="chip" onclick="quickAction('AI 커버곡')">🤖 AI 저작권</div>
+        <div class="chip" onclick="quickAction('알바 해고')">🏢 근로기준법</div>
+        <div class="chip" onclick="quickAction('중고 사기')">⚖️ 형법(사기)</div>
+        <div class="chip" onclick="quickAction('부동산 임대차')">🏠 주택임대차법</div>
+        <div class="chip" onclick="quickAction('교통사고')">🚗 도로교통법</div>
+    </div>
+
+    <section class="search-section">
+        <div class="search-card">
+            <div class="search-group">
+                <input type="text" id="userStory" placeholder="분석할 상황을 입력하세요 (eg. 알바 해고 당했어)">
+                <button class="btn-analyze" onclick="analyzeStory()">지능형 진단</button>
+            </div>
+            <div class="search-group">
+                <input type="text" id="directSearch" placeholder="법령명 직접 검색">
+                <button class="btn-search" onclick="fetchList()">실시간 검색</button>
+            </div>
+        </div>
+    </section>
+
+    <div class="main-layout">
+        <aside>
+            <div class="aside-box tree-box" id="hierarchy-container">
+                <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 10px;">🌳 법률 체계 가계도 (클릭 시 이동)</div>
+                <div id="hierarchy-content">
+                    <div class="tree-node" onclick="fetchLawByName('대한민국헌법')"><span style="color:#94a3b8; font-size:9px; display:block;">최상위법</span>대한민국 헌법</div>
+                    <div class="tree-node active" id="current-tree-node"><span style="color:#94a3b8; font-size:9px; display:block;">본 법령</span>(법령 선택 시 활성)</div>
+                    <div class="tree-node"><span style="color:#94a3b8; font-size:9px; display:block;">하위 시행령</span>(시행령 자동 매칭)</div>
+                </div>
+            </div>
+
+            <div class="aside-box" style="flex: 1;">
+                <div style="font-size: 0.75rem; font-weight: 800; margin-bottom: 10px;">📋 실시간 검색 리스트</div>
+                <div id="law-list-box">
+                    <p style="text-align:center; color:#94a3b8; font-size:11px; margin-top:30px;">결과가 표시됩니다.</p>
+                </div>
+            </div>
+        </aside>
+
+        <main class="dashboard-content">
+            <div class="viewer-header" id="viewer-header">
+                <button style="background:#cbd5e1; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:11px;" onclick="goBack()">← 목록 복원</button>
+                <span id="header-law-name" style="font-weight:700; font-size:13px;"></span>
+            </div>
+            
+            <div class="content-scroll-area" id="content-scroll">
+                <div id="empty-view">
+                    <h2>⚖️</h2>
+                    <p>지능형 법률 대시보드</p>
+                    <p style="font-size: 11px; color: #94a3b8; margin-top: 20px;">
+                        실시간 법령 정보가 보이지 않는다면 <br>
+                        <a href="https://chromewebstore.google.com/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf" target="_blank" style="color: #64748b; text-decoration: underline;">CORS 허용 확장 프로그램</a> 설치가 필요합니다.
+                    </p>
+                </div>
+                <iframe id="law-frame"></iframe>
+                
+                <div id="academic-report">
+                    <div class="report-card">
+                        <div id="report-title" style="font-size:18px; font-weight:800; color:var(--primary); margin-bottom:10px;"></div>
+                        <div id="report-body" style="line-height:1.7; font-size:14px; color:var(--text-sub); white-space:pre-wrap;"></div>
+                    </div>
+                    <div class="legal-advice-box">
+                        <div class="legal-advice-text">
+                            📢 <b>전문가 상담 권장:</b> 본 시스템의 분석 결과는 법적 참고용입니다.<br>
+                            구체적인 분쟁 해결을 위해서는 반드시 <b>변호사 등 법률 전문가</b>의 도움을 받으시길 권장합니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="precedent-bot">
+                <div class="bot-header">
+                    <span>🤖 KUSL AI 판례 요약 봇</span>
+                    <span style="cursor:pointer;" onclick="document.getElementById('precedent-bot').style.display='none'">×</span>
+                </div>
+                <div class="bot-content" id="bot-content">
+                    <div style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-bottom: 8px; display: inline-block;">관련 대법원 리딩 케이스</div>
+                    <div id="precedent-text">법령을 선택하면 관련 판례 요약이 여기에 나타납니다.</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+</div><!-- /page-dashboard -->
+
+<!-- ════════════════════════════════════════
+     페이지 2: 민사재판 시뮬레이터
+════════════════════════════════════════ -->
+<div class="page" id="page-civil">
+    <div class="civil-layout">
+        
+        <!-- 왼쪽: 소송 절차 단계적 가이드 -->
+        <div class="civil-card">
+            <div class="civil-header">
+                <span class="civil-title">⚖️ 민사 소송 절차 가이드</span>
+                <span style="font-size:11px; color:var(--text-sub);">실제 재판 단계별 지침</span>
+            </div>
+            <div class="civil-body">
+                <div class="timeline-vertical">
+                    <div class="timeline-step active" onclick="switchCivilStep(1, this)">
+                        <div class="step-num">1</div>
+                        <div class="step-detail">
+                            <span class="step-title">소장의 제출 (소 제기)</span>
+                            <span class="step-desc">원고가 법원에 소장을 제출하며 재판 절차가 공식적으로 시작됩니다.</span>
+                        </div>
+                    </div>
+                    <div class="timeline-step" onclick="switchCivilStep(2, this)">
+                        <div class="step-num">2</div>
+                        <div class="step-detail">
+                            <span class="step-title">피고의 답변서 제출</span>
+                            <span class="step-desc">소장 부본을 받은 피고는 30일 이내에 다투는 취지의 답변서를 제출해야 합니다.</span>
+                        </div>
+                    </div>
+                    <div class="timeline-step" onclick="switchCivilStep(3, this)">
+                        <div class="step-num">3</div>
+                        <div class="step-detail">
+                            <span class="step-title">변론준비기일 및 기일 지정</span>
+                            <span class="step-desc">본격 재판 전 서면 공방 및 쟁점과 증거 관계를 정리하는 정리 기일입니다.</span>
+                        </div>
+                    </div>
+                    <div class="timeline-step" onclick="switchCivilStep(4, this)">
+                        <div class="step-num">4</div>
+                        <div class="step-detail">
+                            <span class="step-title">변론기일 (재판 대면 변론)</span>
+                            <span class="step-desc">법정에서 판사 앞에서 양측 주장과 증거 조사가 집중적으로 치러집니다.</span>
+                        </div>
+                    </div>
+                    <div class="timeline-step" onclick="switchCivilStep(5, this)">
+                        <div class="step-num">5</div>
+                        <div class="step-detail">
+                            <span class="step-title">판결선고 및 판결 확정</span>
+                            <span class="step-desc">판결이 선고되고 2주 이내 항소가 제기되지 않으면 판결이 최종 확정됩니다.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="timeline-info-box" id="step-info-box">
+                    <strong>💡 [1단계: 소장 제출] 스포츠법 연구회 가이드</strong><br>
+                    스포츠 관련 민사소송(계약금 반환, 위약금 청구, 전속계약 부존재 확인 등)은 청구금액에 따라 소액사건(3천만 원 이하), 단독사건(5억 원 이하), 합의사건(5억 초과)으로 구분되어 심리됩니다. 청구원인과 입증서류를 꼼꼼하게 기술하는 것이 핵심입니다.
+                </div>
+            </div>
+        </div>
+
+        <!-- 오른쪽: 실시간 소장(訴狀) 작성 및 초안 렌더러 -->
+        <div class="civil-card" style="overflow-y: auto;">
+            <div class="civil-header">
+                <span class="civil-title">📝 지능형 스포츠 법률 소장(訴狀) 작성기</span>
+                <button class="btn-analyze" onclick="generateComplaint()" style="height:30px; font-size:11px;">소장 초안 자동생성</button>
+            </div>
+            <div class="civil-body" style="display: flex; flex-direction: column; gap: 20px;">
+                
+                <!-- 설정 입력 폼 -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px;">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>분쟁 시나리오 선택</label>
+                            <select id="case-select" onchange="applyCaseScenario()">
+                                <option value="agent">스포츠 에이전트 전속계약 해지 및 위약금 분쟁</option>
+                                <option value="salary">프로 선수 밀린 연봉 및 훈련수당 청구</option>
+                                <option value="injury">실내 체육시설(안전의무 위반) 상해 손해배상</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>관할 법원</label>
+                            <input type="text" id="court-name" value="서울중앙지방법원">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>원고(소송 제기자) 성명/법인명</label>
+                            <input type="text" id="plaintiff-name" value="홍길동 (선수)">
+                        </div>
+                        <div class="form-group">
+                            <label>원고 주소</label>
+                            <input type="text" id="plaintiff-addr" value="서울특별시 광진구 능동로 120 건국대학교">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>피고(소송 당사자) 성명/법인명</label>
+                            <input type="text" id="defendant-name" value="(주)KUSL 스포츠에이전시 대표 김피고">
+                        </div>
+                        <div class="form-group">
+                            <label>피고 주소</label>
+                            <input type="text" id="defendant-addr" value="서울특별시 강남구 테헤란로 99">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 10px;">
+                        <label>청구 금액 (원)</label>
+                        <input type="number" id="claim-amount" value="50000000" placeholder="예: 50000000">
+                    </div>
+                </div>
+
+                <!-- 실시간 렌더링된 소장 용지 -->
+                <div class="document-paper" id="complaint-paper">
+                    <div class="doc-watermark">KUSL LEGAL-TECH</div>
+                    <div class="doc-header">소 장</div>
+                    
+                    <div class="doc-section">
+                        <table class="doc-meta-table">
+                            <tr>
+                                <td class="label">원 고</td>
+                                <td id="render-plaintiff">홍길동 (선수)<br><span style="font-size:11px; color:#555;" id="render-plaintiff-addr">주소: 서울특별시 광진구 능동로 120 건국대학교</span></td>
+                            </tr>
+                            <tr>
+                                <td class="label">피 고</td>
+                                <td id="render-defendant">(주)KUSL 스포츠에이전시 대표 김피고<br><span style="font-size:11px; color:#555;" id="render-defendant-addr">주소: 서울특별시 강남구 테헤란로 99</span></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    <div class="doc-section">
+                        <div class="doc-section-title">청 구 취 지</div>
+                        <div id="render-claim-purpose">
+                            1. 피고는 원고에게 금 50,000,000원 및 이에 대한 이 사건 소장 부본 송달 다음 날부터 다 갚는 날까지 연 12%의 비율로 계산한 돈을 지급하라.<br>
+                            2. 소송비용은 피고가 부담한다.<br>
+                            3. 제1항은 가집행할 수 있다.<br>
+                            라는 판결을 구합니다.
+                        </div>
+                    </div>
+
+                    <div class="doc-section">
+                        <div class="doc-section-title">청 구 원 인</div>
+                        <div id="render-claim-reason" style="white-space: pre-wrap; font-size: 12.5px; text-align: justify;">
+1. 당사자 관계
+원고는 대한민국 최고 수준의 농구 유망주 선수이며, 피고는 스포츠 매니지먼트 및 에이전트 업무를 영위하는 대리 법인입니다.
+
+2. 계약 불이행 및 위약 발생 경위
+원고와 피고는 전속 에이전트 계약을 체결하였으나, 피고는 약정한 선급 훈련비 지원 및 해외 리그 진출 교섭 의무를 고의적으로 태만히 하였습니다. 이에 원고는 수차례 독촉하였으나 무응답으로 일관하여 피고의 귀책사유로 계약이 적법하게 해지되었으며, 이에 따른 계약상 손해배상 및 기 지급 위약벌 납부를 청구하고자 합니다.
+
+3. 결론
+원고는 피고의 성실 의무 위반에 대한 해지에 갈음하여 미지급 금액 반환 청구를 제기하오니, 부디 원고의 청구를 신속히 인용하여 주시기 바랍니다.
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin: 40px 0 20px; font-weight: bold;" id="render-date">
+                        2026. 06. 11.
+                    </div>
+
+                    <div style="text-align: right; font-weight: bold; padding-right: 30px;">
+                        위 원고 <span id="render-signature">홍길동 (선수)</span> (인)
+                    </div>
+
+                    <div style="font-weight: bold; margin-top: 30px; font-size: 14px;" id="render-court">
+                        서울중앙지방법원 귀중
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div><!-- /page-civil -->
+
+<!-- ════════════════════════════════════════
+     페이지 3: 형사 모의재판 (통합 및 스코프 적용)
+════════════════════════════════════════ -->
+<div class="page" id="page-mocktrial">
+    
+    <!-- 세부 제어 탑 바 (내비게이션 보조) -->
+    <div class="control-bar">
+        <button class="back-btn" onclick="switchTab('dashboard', document.getElementById('btn-dashboard'))">← 대시보드로 돌아가기</button>
+        <div class="header-badge">26-2분기 형사모의재판</div>
+    </div>
+
+    <!-- 히어로 섹션 -->
+    <div class="hero">
+        <div class="hero-eyebrow">🏛️ MOCK TRIAL · CRIMINAL CASE</div>
+        <h1 class="hero-title">
+            서울중앙지방법원<br>
+            <span class="accent">강제추행 및 명예훼손</span> 형사재판
+        </h1>
+        <p class="hero-desc">
+            여자프로배구단 "서울 스파이크스" 수석코치 김도현에 대한<br>
+            강제추행(형법 제298조) 및 명예훼손(형법 제307조 제2항) 형사 공판 기록
+        </p>
+    </div>
+
+    <!-- 사건 기본 개요 정보 -->
+    <div class="case-meta">
+        <div class="meta-item">
+            <div class="meta-label">사건번호</div>
+            <div class="meta-value red">2026고합1234</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">법원</div>
+            <div class="meta-value">서울중앙지방법원 제25형사부</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">피고인</div>
+            <div class="meta-value">김도현 (38세, 수석코치)</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">공소사실</div>
+            <div class="meta-value">강제추행 · 명예훼손</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">심리일</div>
+            <div class="meta-value">2026. 05. 06.</div>
+        </div>
+        <div class="meta-item">
+            <div class="meta-label">검사 구형</div>
+            <div class="meta-value red">징역 5년</div>
+        </div>
+    </div>
+
+    <!-- 변론 참여진 목록 -->
+    <div class="participant-strip">
+        <div style="font-size:10px; font-weight:800; color:var(--muted); letter-spacing:1.5px; text-transform:uppercase; margin-right:4px;">재판 참여자</div>
+        <div class="p-chip">
+            <div class="p-dot judge"></div>
+            <div><div class="p-name-sm">형사재판 판사조</div><div class="p-role-sm">재판장</div></div>
+        </div>
+        <div class="p-chip">
+            <div class="p-dot pro"></div>
+            <div><div class="p-name-sm">윤상현 · 박정욱 · 최승민 · 오세은</div><div class="p-role-sm">검사 측</div></div>
+        </div>
+        <div class="p-chip">
+            <div class="p-dot con"></div>
+            <div><div class="p-name-sm">김나연 · 복지윤 · 안범준 · 윤채원</div><div class="p-role-sm">변호인 측 (법무법인 KUSL)</div></div>
+        </div>
+        <div class="p-chip">
+            <div class="p-dot wit"></div>
+            <div><div class="p-name-sm">박지훈 (트레이너) · 정혜림 (선수)</div><div class="p-role-sm">증인</div></div>
+        </div>
+    </div>
+
+    <!-- 모의재판 서브 탭 내비게이션 -->
+    <div class="tab-bar">
+        <button class="tab active" onclick="switchMockTrialTab('overview', this)">📋 사건 개요</button>
+        <button class="tab" onclick="switchMockTrialTab('prosecutor', this)">⚖️ 검사 측 의견</button>
+        <button class="tab" onclick="switchMockTrialTab('defense', this)">🛡️ 변호인 측 변론</button>
+        <button class="tab" onclick="switchMockTrialTab('evidence', this)">🔍 증거 목록</button>
+        <button class="tab" onclick="switchMockTrialTab('verdict', this)">📜 판결</button>
+    </div>
+
+    <!-- ── 모의재판 세부 탭 1: 개요 ── -->
+    <div class="content active" id="tab-overview">
+        <div class="section-wrap">
+            <div class="overview-grid">
+                
+                <div class="info-card">
+                    <div class="card-title">당사자</div>
+                    <div class="profile-row">
+                        <div class="profile-icon defendant">⚠️</div>
+                        <div>
+                            <div class="profile-name">피고인 — 김도현 (38세)</div>
+                            <div class="profile-desc">
+                                여자프로배구단 <strong style="color:var(--text);">"서울 스파이크스"</strong> 수석코치.<br>
+                                선수들의 훈련 프로그램 및 재활관리 담당. 감독에게 선수 선발 의견을 직접 제공하는 지위에 있었음.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="profile-row">
+                        <div class="profile-icon victim">👤</div>
+                        <div>
+                            <div class="profile-name">피해자 — 이소연 (24세)</div>
+                            <div class="profile-desc">
+                                팀의 <strong style="color:var(--text);">주전 세터</strong>, 국가대표 상비군 출신 핵심 선수.<br>
+                                경기 출전 여부에 민감할 수밖에 없는 지위로, 피고인의 영향력 아래 놓여 있었음.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <div class="card-title">공소사실 · 적용 법조</div>
+                    <div style="margin-bottom: 12px;">
+                        <span class="charge-badge">형법 제298조</span>
+                        <span class="charge-badge">형법 제307조 제2항</span>
+                    </div>
+                    <div style="font-size:12.5px; color:#94a3b8; line-height:1.7;">
+                        <div style="margin-bottom: 8px;">
+                            <strong style="color:var(--text);">① 강제추행</strong> — 2025. 2. 17. 트레이닝센터 물리치료실에서 피해자 이소연의 허리 아래 부위에 불필요하게 접촉한 행위
+                        </div>
+                        <div>
+                            <strong style="color:var(--text);">② 명예훼손</strong> — 2025. 3. 15. 인스타그램 공개 계정(팔로워 약 4,000명)에 피해자를 특정할 수 있는 허위 게시글을 작성·유포한 행위
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-card full">
+                    <div class="card-title">사건 경과 일지</div>
+                    <div class="timeline-event">
+                        <div class="t-date">2025. 02. 17.</div>
+                        <div class="t-text">오후, 트레이닝센터 물리치료실. 피고인이 이소연에게 재활 마사지를 시행하던 중 허리 아래 부위까지 불필요하게 접촉. 피해자가 즉시 "그만해 주세요"라고 거부하였으나 피고인은 "재활 과정에서 흔한 일"이라며 묵살.</div>
+                    </div>
+                    <div class="timeline-event">
+                        <div class="t-date">2025. 02. 17.<br>이후</div>
+                        <div class="t-text">피고인은 훈련 중 피해자 어깨·등에 접촉하며 "오늘은 집중이 잘 된다", "우리 둘만의 루틴을 만들자" 등 사적 메시지를 반복 전송. 피해자, 동료 선수 정혜림 및 매니저에게 피해 사실을 토로.</div>
+                    </div>
+                    <div class="timeline-event">
+                        <div class="t-date">2025. 03. 초</div>
+                        <div class="t-text">피해자, 구단 인사팀에 성희롱·성추행 피해 신고. 구단, 피고인에 직무정지 조치 및 내부 조사 개시.</div>
+                    </div>
+                    <div class="timeline-event">
+                        <div class="t-date">2025. 03. 15.</div>
+                        <div class="t-text">피고인, 인스타그램 공개 계정에 "팀 내 특정 선수가 나를 모함하기 위해 허위사실을 퍼뜨렸다", "그 선수가 먼저 나에게 호감을 가지고 접근했다"는 글 게시. 4시간 후 자진 삭제. 그러나 이미 캡처·전파되어 피해자는 "이성관계로 주전 자리를 차지한 선수"라는 루머의 대상이 됨.</div>
+                    </div>
+                    <div class="timeline-event">
+                        <div class="t-date">2025. 04. 02.</div>
+                        <div class="t-text">피해자, 피고인 김도현을 강제추행 및 명예훼손 혐의로 고소.</div>
+                    </div>
+                </div>
+
+                <div class="info-card full">
+                    <div class="card-title">핵심 변론 공방 구조</div>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                        <div>
+                            <div style="font-size:11px; font-weight:800; color:var(--pro); margin-bottom:12px; letter-spacing:1px;">⚖️ 강제추행 주요 쟁점</div>
+                            <div style="font-size:12.5px; color:#94a3b8; line-height:1.75;">
+                                <div style="margin-bottom:8px;">• 허리 아래 부위 접촉이 <strong style="color:var(--text);">재활 지도의 범위</strong>를 벗어난 추행인가?</div>
+                                <div style="margin-bottom:8px;">• 피해자의 "그만해 주세요" 발언이 <strong style="color:var(--text);">명확한 거부 의사</strong>로 피고인에게 인식되었는가?</div>
+                                <div style="margin-bottom:8px;">• 선발 불이익 암시 발언이 <strong style="color:var(--text);">협박</strong>에 해당하는가?</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size:11px; font-weight:800; color:var(--con); margin-bottom:12px; letter-spacing:1px;">📢 명예훼손 주요 쟁점</div>
+                            <div style="font-size:12.5px; color:#94a3b8; line-height:1.75;">
+                                <div style="margin-bottom:8px;">• 실명 미기재 게시글의 <strong style="color:var(--text);">피해자 특정성</strong>이 인정되는가?</div>
+                                <div style="margin-bottom:8px;">• 게시 내용이 <strong style="color:var(--text);">허위사실 적시</strong>인가, 아니면 단순 의견 표명인가?</div>
+                                <div style="margin-bottom:8px;">• 형법 제310조 <strong style="color:var(--text);">위법성 조각</strong>(공익 목적) 적용이 성립하는가?</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 모의재판 세부 탭 2: 검사 의견 ── -->
+    <div class="content" id="tab-prosecutor">
+        <div class="section-wrap">
+            <div style="margin-bottom: 32px;">
+                <div class="sec-header">
+                    <span class="sec-label pro">강제추행 — 검사 측 주장</span>
+                    <div class="sec-divider"></div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num pro">1</div>
+                    <div class="point-text">
+                        <strong>폭행 해당성</strong> — 피해자의 직접적인 "그만해 주세요" 거부에도 행위를 강행했다. 대법원 판례 기준상 강제추행의 폭행은 대단히 강할 필요가 없으며, 의사에 반하는 유형력의 행사 자체로 이미 족하다.
+                        <div class="law-cite"><strong>대법원 2018도13877 전원합의체</strong> — 폭행·협박은 반드시 상대방의 항거를 곤란하게 할 정도여야 하는 것은 아니며, 불법적인 유형력 표출로 족하다.</div>
+                    </div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num pro">2</div>
+                    <div class="point-text">
+                        <strong>우월적 위계의 남용</strong> — "선발 결정에 고민이 생길 수 있다"는 구두 언급은 지위상의 불이익 처분을 실질적으로 암시해 자유의사를 압박한 간접적 협박 수단에 해당한다.
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 32px;">
+                <div class="sec-header">
+                    <span class="sec-label pro">명예훼손 — 검사 측 주장</span>
+                    <div class="sec-divider"></div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num pro">1</div>
+                    <div class="point-text">
+                        <strong>피해자 특정성 충족</strong> — 게시글에 "주전 세터, 국가대표" 문구를 결합했다면 실명이 미기재되었다 한들 팀 내 특정 선수를 지칭하는 것으로써 일반 팬들이 충분히 유추 가능했다.
+                    </div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num pro">2</div>
+                    <div class="point-text">
+                        <strong>비방 목적 및 2차 가해</strong> — 무마를 시도하려 여론전 및 고의 루머를 조장한 정황이 뚜렷하므로, 형법 제310조의 공공의 이익 목적에 결코 포함될 수 없다.
+                    </div>
+                </div>
+                <div class="sentence-demand">
+                    <div>
+                        <div class="sd-label">검사 최종 구형</div>
+                        <div style="font-size:12px; color:var(--muted); margin-top:4px;">경합범 처리 · 지속적 반성 부재 · 성적 2차 가해 심각성 반영</div>
+                    </div>
+                    <div class="sd-value">징역 5년</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 모의재판 세부 탭 3: 변호인 의견 ── -->
+    <div class="content" id="tab-defense">
+        <div class="section-wrap">
+            <div style="margin-bottom: 32px;">
+                <div class="sec-header">
+                    <span class="sec-label con">강제추행 — 변호인 측 변론</span>
+                    <div class="sec-divider"></div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num con">1</div>
+                    <div class="point-text">
+                        <strong>정상 트레이닝 지침의 수급</strong> — 구단 공식 매뉴얼 상에 기록된 둔부 주변 근막 이완 테라피의 표준적 범주 내 행동이었으며, 다른 선수들에게도 일률 기록된 일상적인 관리 과정에 속했다.
+                    </div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num con">2</div>
+                    <div class="point-text">
+                        <strong>명확한 거부 의사 표명 부재</strong> — 인접 치료 공간에 보조 물리치료사 등이 항상 대기하고 있는 상태였으며, 당시 구체적인 비명이나 탈출하려는 정황이 수사 기록 상 명시되지 않았다.
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 32px;">
+                <div class="sec-header">
+                    <span class="sec-label con">명예훼손 — 변호인 측 변론</span>
+                    <div class="sec-divider"></div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num con">1</div>
+                    <div class="point-text">
+                        <strong>자기 소명 및 억울함 호소</strong> — 단지 구단 징계 및 언론 왜곡 사실에 대해 방어적 진술을 전개한 것에 불과하며, 게시 4시간 만에 자진 폐쇄한 사실이 계획적인 훼손 의도가 없었음을 대변한다.
+                    </div>
+                </div>
+                <div class="arg-point">
+                    <div class="point-num con">2</div>
+                    <div class="point-text">
+                        <strong>사실 근거의 기재</strong> — 과거 원고가 호감을 담은 개인 연락을 발송한 객관적 정황에 의거해 글을 올렸으므로 사실 왜곡 등의 명백한 고의성이 성립하지 않는다.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 모의재판 세부 탭 4: 증거 목록 ── -->
+    <div class="content" id="tab-evidence">
+        <div class="section-wrap">
+            <div class="sec-header">
+                <span class="sec-label evidence">채택 증거 일람</span>
+                <div class="sec-divider"></div>
+            </div>
+            <div class="evidence-grid">
+                <div class="ev-card">
+                    <div class="ev-num">증거자료 1</div>
+                    <div class="ev-title">물리치료실 입구 CCTV 녹화본</div>
+                    <div class="ev-desc">사건 시간 전후 피해자의 진입 시점과 종료 후 나가는 일련 과정의 경과를 증거 능력이 인정되도록 입증하는 데이터 기록.</div>
+                </div>
+                <div class="ev-card">
+                    <div class="ev-num">증거자료 2</div>
+                    <div class="ev-title">메신저 대화 덤프 기록</div>
+                    <div class="ev-desc">"사건 무마 유도 지적" 등의 언동 및 성적으로 다가가려는 사적 통화 연락 사실을 구증하는 텍스트 목록.</div>
+                </div>
+                <div class="ev-card">
+                    <div class="ev-num">증거자료 3</div>
+                    <div class="ev-title">인스타그램 본문 캡처 및 아카이브</div>
+                    <div class="ev-desc">게시 당시 인스타그램 주소 계정 정보 및 삭제되기 전 배구 커뮤니티로 퍼진 재인용 주소와 인포 데이터 일체.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── 모의재판 세부 탭 5: 판결문 ── -->
+    <div class="content" id="tab-verdict">
+        <div class="section-wrap">
+            <div class="verdict-section">
+                
+                <div class="verdict-box">
+                    <div class="verdict-stamp">⚖ 판 결 문 · 2026고합1234</div>
+                    <div class="verdict-main">피고인 김도현<br>유죄 — 징역 3년, 집행유예 5년</div>
+                    <div class="verdict-detail">
+                        강제추행죄 및 정보통신망법 위반 명예훼손죄 경합 범죄 성립을 유죄로 엄정 판시한다.<br>
+                        징역 집행 유예 5년과 함께 성폭력 보호 수강 프로그램 80시간 및 신상 신원 등록을 엄중 처벌 명령한다.
+                    </div>
+                </div>
+
+                <div class="reasoning-block">
+                    <div class="reasoning-title">판결 요지 — 강제추행 성립의 이유</div>
+                    <div class="reasoning-text">
+                        치료나 훈련 목적을 명목으로 삼았다 하더라도 신체적 한계 지점을 크게 일탈한 성적 민감부위의 강박 접촉은 정당행위로 포섭할 수 없으며, 사정 상 훈련을 지속해야만 했던 프로 스포츠 생태 환경 특유의 무언의 묵인을 자의적으로 피해 부재로 취급하여 무죄를 선고할 수 없다.
+                    </div>
+                </div>
+
+                <div class="reasoning-block">
+                    <div class="reasoning-title">판결 요지 — 명예훼손 성립의 이유</div>
+                    <div class="reasoning-text">
+                        실명을 특정 지어 나열하지 않았을지라도, 기술된 문맥 상 단일한 인물로 결론 유도가 즉각적이었으며, 팬카페의 급속 전파 양상이 이미 피해자 특정성이 완전히 구현되고 명예 실추가 진행되었음을 법정 증명하므로 명백한 정보통신망법 상의 명예훼손에 부합한다.
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="mocktrial-footer">
+        © 2026 KUSL · Korea University Sports Law &nbsp;·&nbsp; 본 시나리오는 교육 및 예시용 학술 데이터입니다.
+    </div>
+</div><!-- /page-mocktrial -->
+
+<!-- ── 상단 포털 메인 공통 푸터 ── -->
+<footer class="portal-footer" id="main-portal-footer">© 2026 KUSL Sports Law Hub</footer>
+
+<script>
+    // ── 글로벌 API 환경 설정 ──
+    const API_KEY = 'lawproject'; 
+    const db = {
+        "시민구단": { q: "상법", h: ["대한민국헌법", "상법", "상법 시행령"], title: "시민구단 상법 독립성 분석", body: "시민구단은 상법상 주식회사로서 지자체장의 인사 개입은 주주권 일탈 행위에 해당합니다.", precedent: "대법원 2012.x.x 선고: 지배구조 분쟁 시 상법상 법인격 독립성을 중시하며 지자체장의 독단적 개입을 제한함." },
+        "AI": { q: "부정경쟁방지 및 영업비밀보호에 관한 법률", h: ["대한민국헌법", "부정경쟁방지 및 영업비밀보호에 관한 법률", "부정경쟁방지 및 영업비밀보호에 관한 법률 시행령"], title: "AI 음성권 보호 학술 리포트", body: "음성 복제는 부경법 제2조 1호 타목에 의한 새로운 보호 영역입니다.", precedent: "최근 판결 경향: 타인의 성명·음성 등을 무단 사용하여 경제적 이익을 침해하는 행위는 부정경쟁행위로서 인격표지영리권 보호를 인정함." },
+        "알바": { q: "근로기준법", h: ["대한민국헌법", "근로기준법", "근로기준법 시행령"], title: "부당해고 구제 실무 가이드", body: "해고예고수당 청구 절차와 노동위원회 신청이 핵심입니다.", precedent: "대법원 2015.x.x 선고: 해고 절차(서면 통보 등)를 거치지 않은 경우 사유가 정당하더라도 부당해고로 간주함." },
+        "사기": { q: "형법", h: ["대한민국헌법", "형법", "형법 시행령"], title: "사기죄 기망행위 입증 가이드", body: "중고거래 등 편취 의사를 입증하는 대화록 확보가 필수입니다.", precedent: "대법원 판례: 처음부터 대금을 지급할 의사나 능력이 없음에도 물건을 인도받은 경우 사기죄 성립을 긍정함." },
+        "부동산": { q: "주택임대차보호법", h: ["대한민국헌법", "주택임대차보호법", "주택임대차보호법 시행령"], title: "보증금 회수 Action Plan", body: "임차권등기명령은 세입자의 대항력을 유지하는 최후 수단입니다.", precedent: "대법원 판례: 임대차가 종료된 후 보증금을 반환받지 못한 임차인은 임차권등기를 통해 대항력을 유지할 수 있음." },
+        "교통사고": { q: "도로교통법", h: ["대한민국헌법", "도로교통법", "도로교통법 시행령"], title: "교통사고 구호조치 의무 분석", body: "과실 여부와 관계없이 구호조치 미이행 시 뺑소니가 성립합니다.", precedent: "대법원 선고: 사고 후 조치 없이 현장을 이탈하는 행위는 도로교통법 제54조 위반으로 엄격히 처벌함." }
+    };
+
+    // ── [중요] 메인 탭 전환 컨트롤러 ──
+    function switchTab(pageId, btn) {
+        // 모든 탭 해제
+        document.querySelectorAll('.tab-nav .tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // 모든 페이지 분할 화면 감추기
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        
+        // 대상 활성화
+        const targetPage = document.getElementById('page-' + pageId);
+        targetPage.classList.add('active');
+
+        // 형사 모의재판 다크 테마 전환 시 하단 공통 푸터 조정 및 레이아웃 제어
+        const footer = document.getElementById('main-portal-footer');
+        if (pageId === 'mocktrial') {
+            footer.style.display = 'none'; // 자체 푸터를 사용하므로 포털 푸터 비활성화
+        } else {
+            footer.style.display = 'flex';
+        }
+    }
+
+    // ── 대시보드 퀵 서치 ──
+    function quickAction(v) { 
+        document.getElementById('userStory').value = v; 
+        analyzeStory(); 
+    }
+
+    // ── 지능형 법률 대시보드 자바스크립트 ──
+    function analyzeStory() {
+        const input = document.getElementById('userStory').value;
+        let key = "";
+        if (input.includes("시민구단")) key = "시민구단";
+        else if (input.includes("AI") || input.includes("커버곡")) key = "AI";
+        else if (input.includes("알바") || input.includes("해고")) key = "알바";
+        else if (input.includes("사기")) key = "사기";
+        else if (input.includes("부동산") || input.includes("전세")) key = "부동산";
+        else if (input.includes("교통") || input.includes("사고")) key = "교통사고";
+
+        if (key) {
+            updateHierarchy(db[key].h);
+            document.getElementById('report-title').innerText = db[key].title;
+            document.getElementById('report-body').innerText = db[key].body;
+            document.getElementById('directSearch').value = db[key].q;
+            document.getElementById('precedent-text').innerText = db[key].precedent;
+            document.getElementById('precedent-bot').style.display = 'flex';
+            fetchList(db[key].q);
+        }
+    }
+
+    function updateHierarchy(hArr) {
+        let hHtml = `
+            <div class="tree-node" onclick="fetchLawByName('${hArr[0]}')"><span style="color:#94a3b8; font-size:9px; display:block;">최상위법</span>${hArr[0]}</div>
+            <div class="tree-node active" onclick="fetchLawByName('${hArr[1]}')"><span style="color:#94a3b8; font-size:9px; display:block;">본 법령</span>${hArr[1]}</div>
+            <div class="tree-node" onclick="fetchLawByName('${hArr[2]}')"><span style="color:#94a3b8; font-size:9px; display:block;">하위 시행령</span>${hArr[2]}</div>
+        `;
+        document.getElementById('hierarchy-content').innerHTML = hHtml;
+    }
+
+    async function fetchLawByName(name) {
+        try {
+            const res = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?OC=${API_KEY}&target=law&query=${encodeURIComponent(name)}&type=XML`);
+            const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
+            const items = xml.getElementsByTagName("law");
+            if (items.length > 0) {
+                const id = items[0].getElementsByTagName("법령ID")[0].textContent;
+                const realName = items[0].getElementsByTagName("법령명한글")[0].textContent;
+                showDetail(id, realName);
+            }
+        } catch(e) { console.error("Search error"); }
+    }
+
+    async function fetchList(forceQ = null) {
+        const q = forceQ || document.getElementById('directSearch').value;
+        const box = document.getElementById('law-list-box');
+        box.innerHTML = "조회 중...";
+        try {
+            const res = await fetch(`https://www.law.go.kr/DRF/lawSearch.do?OC=${API_KEY}&target=law&query=${encodeURIComponent(q)}&type=XML`);
+            const xml = new DOMParser().parseFromString(await res.text(), "text/xml");
+            const items = xml.getElementsByTagName("law");
+            let html = '';
+            for(let i=0; i<Math.min(items.length, 10); i++) {
+                const name = items[i].getElementsByTagName("법령명한글")[0].textContent;
+                const id = items[i].getElementsByTagName("법령ID")[0].textContent;
+                html += `<div class="law-item" onclick="showDetail('${id}', '${name}', this)">${name}</div>`;
+            }
+            box.innerHTML = html || "결과 없음";
+        } catch(e) { box.innerHTML = "조회 실패 (확장 프로그램을 확인하세요)"; }
+    }
+
+    function showDetail(id, name, el = null) {
+        if (el) {
+            document.querySelectorAll('.law-item').forEach(i => i.classList.remove('active'));
+            el.classList.add('active');
+        }
+        document.getElementById('empty-view').style.display = 'none';
+        document.getElementById('viewer-header').style.display = 'flex';
+        document.getElementById('header-law-name').innerText = name;
+        const frame = document.getElementById('law-frame');
+        frame.style.display = 'block';
+        frame.src = `https://www.law.go.kr/DRF/lawService.do?OC=${API_KEY}&target=law&ID=${id}&type=HTML`;
+        document.getElementById('academic-report').style.display = 'block';
+    }
+
+    function goBack() {
+        document.getElementById('law-frame').style.display = 'none';
+        document.getElementById('academic-report').style.display = 'none';
+        document.getElementById('viewer-header').style.display = 'none';
+        document.getElementById('empty-view').style.display = 'block';
+    }
+
+
+    // ── 민사재판 시뮬레이터 로직 ──
+    const civilSteps = {
+        1: {
+            title: "소장의 제출 (소 제기)",
+            desc: "<strong>[1단계: 소장 제출] 스포츠법 연구회 가이드</strong><br>스포츠 관련 민사소송(계약금 반환, 위약금 청구, 전속계약 부존재 확인 등)은 청구금액에 따라 소액사건(3천만 원 이하), 단독사건(5억 원 이하), 합의사건(5억 초과)으로 구분되어 심리됩니다. 청구원인과 입증서류를 꼼꼼하게 기술하는 것이 핵심입니다."
+        },
+        2: {
+            title: "피고의 답변서 제출",
+            desc: "<strong>[2단계: 답변서 제출 및 대항] 스포츠법 연구회 가이드</strong><br>법원은 소장이 유효하다고 인정되면 부본을 피고에게 송달합니다. 피고는 송달받은 날로부터 30일 이내에 원고의 주장에 대응하여 사실관계를 다투거나 원고의 귀책사유를 설명하는 구체적인 '답변서'를 작성해 제출해야 합니다. 기한 내 미제출 시 변론 없이 자백한 것으로 취급(무변론판결)될 수 있습니다."
+        },
+        3: {
+            title: "변론준비기일 및 기일 지정",
+            desc: "<strong>[3단계: 변론준비기일 운용] 스포츠법 연구회 가이드</strong><br>재판부와 서면을 통해 양 당사자의 쟁점을 좁히는 단계입니다. 선수 출전 시간 기록, 급여 및 에이전트 수수료 정산 내역서 등 주요 입증물들의 적정성 여부와 사실확인서가 이 시기에 조율되며, 변론 기일(법정 대면일)을 잡게 됩니다."
+        },
+        4: {
+            title: "변론기일 (법정 공방)",
+            desc: "<strong>[4단계: 실제 법정 변론기일] 스포츠법 연구회 가이드</strong><br>법원 공개법정에서 공식 구두 변론이 열리는 대면 재판 단계입니다. 소장, 답변서, 준비서면을 진술하고 증인신문이 적극적으로 제안됩니다. 법원은 이때 조정 기일에 회부하거나 화해 권고를 제시하여 선수와 법인 간의 조속한 합의 도출을 시도하기도 합니다."
+        },
+        5: {
+            title: "판결선고 및 판결 확정",
+            desc: "<strong>[5단계: 최종 종국 및 판결 선고] 스포츠법 연구회 가이드</strong><br>재판부가 양측의 변론을 토대로 심리를 마치고 판결을 공식 선고합니다. 판결문이 송달된 후 송달일로부터 14일 이내에 원고나 피고가 항소(상소)를 제기하지 않는다면 1심 재판은 그대로 확정되며 법적 효력이 발생합니다."
+        }
+    };
+
+    function switchCivilStep(stepNum, el) {
+        document.querySelectorAll('.timeline-step').forEach(step => step.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('step-info-box').innerHTML = civilSteps[stepNum].desc;
+    }
+
+    const scenarioPresets = {
+        agent: {
+            plaintiff: "홍길동 (농구선수)",
+            plaintiffAddr: "서울특별시 광진구 능동로 120 건국대학교 12층",
+            defendant: "(주)KUSL 스포츠에이전시 대표 김피고",
+            defendantAddr: "서울특별시 강남구 테헤란로 99 테헤란스포츠타워 8층",
+            amount: 50000000,
+            reason: `1. 당사자 관계
+원고는 장래가 촉망되는 촉망받는 농구 선수이며, 피고는 프로 스포츠 선수의 대리 및 계약 대행을 전문으로 영위하는 에이전트 법인입니다.
+
+2. 계약 불이행 및 해지 발생 경위
+원고와 피고는 2025. 11. 1. 전속 에이전트 계약을 체결하고 피고는 원고의 체계적인 해외 전지훈련 및 장비 지원금을 즉각 지급하기로 서약하였습니다. 하지만 피고는 계약 체결 후 6개월이 경과하도록 아무런 지원금을 송금하지 않았고 이에 원고가 최고서를 발송했으나 이행을 거절하였습니다. 피고의 고의적 계약 불이행으로 인하여 계약은 즉시 적법하게 해지되었습니다.
+
+3. 청구 취지의 정당성
+이에 원고는 피고의 기 채무 불이행에 대한 위약금 및 손해배상조로 청구 금액 상당 및 지연 손해금을 구하고자 본 재판을 청구합니다.`
+        },
+        salary: {
+            plaintiff: "임선수 (축구선수)",
+            plaintiffAddr: "인천광역시 미추홀구 소성로 15",
+            defendant: "KUSL 프로축구단 이사장 정대표",
+            defendantAddr: "경기도 수원시 팔달구 경수대로 123",
+            amount: 72000000,
+            reason: `1. 당사자 관계
+원고는 피고 소속의 주전 미드필더 프로 스포츠 선수이며, 피고는 프로축구 연맹에 등록된 대한민국 정식 프로 축구클럽을 운영하는 법인입니다.
+
+2. 임금 체불 및 훈련수당 정산 연체 경위
+원고는 2025년 시즌 근로 및 전속 선수 계약을 체결하여 성실하게 경기에 참가하였으나, 피고 구단은 자금난을 핑계로 2025년 12월부터 현재까지 4개월분의 연봉 및 승리 보너스 수당(총 합산액 72,000,000원)을 지급하지 않고 부당 정산 처리를 미루고 있습니다.
+
+3. 청구 취지의 결론
+근로기준법 및 전속선수 계약 사항에 근거하여 명백한 체불 임금 및 보너스 정산금 지급을 명령받기 위해 본 건 소송을 제기하게 되었습니다.`
+        },
+        injury: {
+            plaintiff: "이회원 (체육 동호인)",
+            plaintiffAddr: "서울특별시 마포구 백범로 35",
+            defendant: "KUSL 스포츠센터 점주 최피고",
+            defendantAddr: "서울특별시 서대문구 신촌로 100",
+            amount: 15000000,
+            reason: `1. 당사자 관계
+원고는 생활 스포츠 및 체육활동을 취미로 영위하는 일반 회원이며, 피고는 대형 실내 체육시설 및 농구코트를 운영하여 수익을 얻는 시설 업주입니다.
+
+2. 시설 안전의무 위반으로 인한 신체 부상 발생 경위
+원고는 2026. 02. 15. 피고의 농구코트에서 경기를 하던 중, 노후된 골대의 연결 쇠창살 및 바닥 마룻바닥 균열로 인해 미끄러지며 우측 발목 인대 파열 및 개방성 골절을 입게 되었습니다. 피고는 체육시설 설치·이용에 관한 법률상 시설물 안전보건 의무를 소홀히 한 책임이 있습니다.
+
+3. 청구 취지의 타당성
+이 사고로 원고는 치료비 10,000,000원 및 정신적 위자료 5,000,000원 상당의 막대한 금전적 및 신체적 피해를 입었으므로 피고가 배상할 의무를 구하고자 소장을 접수합니다.`
+        }
+    };
+
+    function applyCaseScenario() {
+        const scenario = document.getElementById('case-select').value;
+        const preset = scenarioPresets[scenario];
+        
+        document.getElementById('plaintiff-name').value = preset.plaintiff;
+        document.getElementById('plaintiff-addr').value = preset.plaintiffAddr;
+        document.getElementById('defendant-name').value = preset.defendant;
+        document.getElementById('defendant-addr').value = preset.defendantAddr;
+        document.getElementById('claim-amount').value = preset.amount;
+
+        generateComplaint();
+    }
+
+    function generateComplaint() {
+        const plaintiffName = document.getElementById('plaintiff-name').value;
+        const plaintiffAddr = document.getElementById('plaintiff-addr').value;
+        const defendantName = document.getElementById('defendant-name').value;
+        const defendantAddr = document.getElementById('defendant-addr').value;
+        const courtName = document.getElementById('court-name').value;
+        const amount = Number(document.getElementById('claim-amount').value).toLocaleString();
+        const scenarioKey = document.getElementById('case-select').value;
+        
+        // 민사소송 소장 종이 영역 렌더링 매핑
+        document.getElementById('render-plaintiff').innerHTML = `${plaintiffName}<br><span style="font-size:11px; color:#555;">주소: ${plaintiffAddr}</span>`;
+        document.getElementById('render-defendant').innerHTML = `${defendantName}<br><span style="font-size:11px; color:#555;">주소: ${defendantAddr}</span>`;
+        
+        document.getElementById('render-claim-purpose').innerHTML = `
+            1. 피고는 원고에게 금 ${amount}원 및 이에 대한 이 사건 소장 부본 송달 다음 날부터 다 갚는 날까지 연 12%의 비율로 계산한 돈을 지급하라.<br>
+            2. 소송비용은 피고가 부담한다.<br>
+            3. 제1항은 가집행할 수 있다.<br>
+            라는 판결을 구합니다.
+        `;
+        
+        document.getElementById('render-claim-reason').innerText = scenarioPresets[scenarioKey].reason;
+        
+        // 날짜 동적 연동
+        const d = new Date();
+        document.getElementById('render-date').innerText = `${d.getFullYear()}. ${String(d.getMonth() + 1).padStart(2, '0')}. ${String(d.getDate()).padStart(2, '0')}.`;
+        document.getElementById('render-signature').innerText = plaintiffName;
+        document.getElementById('render-court').innerText = `${courtName} 귀중`;
+    }
+
+
+    // ── [중요] 형사 모의재판 탭 내부 전환 스크립트 ──
+    function switchMockTrialTab(id, btn) {
+        // 모의재판 세부 탭들 비활성
+        document.querySelectorAll('#page-mocktrial .tab-bar .tab').forEach(t => t.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // 모의재판 세부 콘텐츠 분할 감추기
+        document.querySelectorAll('#page-mocktrial .content').forEach(c => c.classList.remove('active'));
+        
+        // 지정 콘텐츠 활성화
+        document.getElementById('tab-' + id).classList.add('active');
+        
+        // 전역 스크롤이 아닌 모의재판 스코프 컨테이너 내부의 스크롤을 최상단으로 복귀
+        document.getElementById('page-mocktrial').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+
+    // ── 초기 시작 로드 제어 ──
+    window.onload = function() {
+        applyCaseScenario();
+    };
+</script>
+</body>
+</html>
